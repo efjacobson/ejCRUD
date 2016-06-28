@@ -1,0 +1,25 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+<div class="jumbotron">
+    <h1>All the Things!</h1>
+</div>
+
+<div class="row"
+     ng-app="thingIndexApp">
+    <div class="col-lg-12"
+         ng-controller="thingIndexController as thing">
+        <div ng-repeat="thing in thing.things"
+             ng-cloak>
+            <p>{{thing.Name}} - {{thing.Description}}</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script src="~/Scripts/Angular/Thing/Index/thingIndexApp.js"></script>
+    <script src="~/Scripts/Angular/Thing/Index/thingIndexFactory.js"></script>
+    <script src="~/Scripts/Angular/Thing/Index/thingIndexController.js"></script>
+}

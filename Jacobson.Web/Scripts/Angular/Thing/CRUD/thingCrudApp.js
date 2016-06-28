@@ -1,5 +1,5 @@
 ﻿(function () {
     'use strict';
 
-    angular.module('thingCreateApp', []);
+    angular.module('thingCrudApp', []);
 })();

@@ -8,6 +8,11 @@ namespace Jacobson.Web.Controllers
 {
     public class ThingController : Controller
     {
+        public ActionResult Index()
+        {
+            return View();
+        }
+
         public ActionResult Create()
         {
             return View();
