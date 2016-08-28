@@ -16,7 +16,7 @@ namespace Jacobson.Web.Controllers.Api
     {
         [Route]
         [HttpPost]
-        public HttpResponseMessage Create(Thing thing)
+        public async Task<HttpResponseMessage> Create(Thing thing)
         {
             if (!ModelState.IsValid)
             {
@@ -26,7 +26,7 @@ namespace Jacobson.Web.Controllers.Api
             {
                 try
                 {
-                    int id = ThingService.Create(thing);
+                    int id = await ThingService.Create(thing);
                     return Request.CreateResponse(HttpStatusCode.Created, id);
                 }
                 catch (Exception exception)
@@ -39,11 +39,12 @@ namespace Jacobson.Web.Controllers.Api
 
         [Route]
         [HttpGet]
-        public HttpResponseMessage GetAll()
+        public async Task<HttpResponseMessage> GetAll()
         {
             try
             {
-                List<Thing> allThings = ThingService.GetAll();
+                List<Thing> allThings = new List<Thing>();
+                allThings = await ThingService.GetAll();
                 return Request.CreateResponse(HttpStatusCode.OK, allThings);
             }
             catch (Exception exception)

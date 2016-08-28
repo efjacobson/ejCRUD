@@ -6,23 +6,49 @@ using System.Web;
 using Jacobson.Web.Models.Domain;
 using System.Data.SqlClient;
 using System.Data;
+using System.Diagnostics;
 
 namespace Jacobson.Web.Services
 {
     public class ThingService
     {
-        public static int Create(Thing thing)
+        public static async Task<int> Create(Thing thing)
         {
-            //string connectionString = System.Web.Configuration.WebConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString;
-            //SqlConnection sqlConnection = new SqlConnection(connectionString);
-            //sqlConnection.Open();
-            //SqlCommand sqlCommand = sqlConnection.CreateCommand();
+            int id = -1;
 
-            //await sqlConnection.OpenAsync();
-            return 1;
+            //get connection string from web.config
+            string connectionString = System.Web.Configuration.WebConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString;
+            SqlConnection sqlConnection = new SqlConnection(connectionString);
+
+            try
+            {
+                if (sqlConnection.State == ConnectionState.Closed) {
+                    await sqlConnection.OpenAsync();
+                }
+                SqlCommand sqlCommand = sqlConnection.CreateCommand();
+                sqlCommand.CommandText = "[dbo].[Thing_Create]";
+                sqlCommand.CommandType = CommandType.StoredProcedure;
+                sqlCommand.Parameters.AddWithValue("@Name", thing.Name);
+                sqlCommand.Parameters.AddWithValue("@Description", thing.Description);
+
+                object returnedObject = await sqlCommand.ExecuteScalarAsync();
+                int.TryParse(returnedObject.ToString(), out id);
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(exception.Message);
+            }
+            finally
+            {
+                if (sqlConnection.State == ConnectionState.Open) {
+                    sqlConnection.Close();
+                }
+            }
+
+            return id;
         }
 
-        public static List<Thing> GetAll()
+        public static async Task<List<Thing>> GetAll()
         {
             List<Thing> allThings = new List<Thing>();
 
@@ -30,25 +56,40 @@ namespace Jacobson.Web.Services
             string connectionString = System.Web.Configuration.WebConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString;
 
             SqlConnection sqlConnection = new SqlConnection(connectionString);
-            sqlConnection.Open();
-            SqlCommand sqlCommand = sqlConnection.CreateCommand();
-            sqlCommand.CommandText = "[dbo].[Things_GetAll]";
-            sqlCommand.CommandType = CommandType.StoredProcedure;
-            IDataReader dataReader = sqlCommand.ExecuteReader();
 
-            while (dataReader.Read())
+            try
             {
-                Thing thing = new Thing();
-                int colpos = 0;
+                if (sqlConnection.State == ConnectionState.Closed)
+                {
+                    await sqlConnection.OpenAsync();
+                }
+                SqlCommand sqlCommand = sqlConnection.CreateCommand();
+                sqlCommand.CommandText = "[dbo].[Thing_GetAll]";
+                sqlCommand.CommandType = CommandType.StoredProcedure;
+                IDataReader dataReader = await sqlCommand.ExecuteReaderAsync();
 
-                thing.Id = dataReader.GetInt32(colpos++);
-                thing.Name = dataReader.GetString(colpos++);
-                thing.Description = dataReader.GetString(colpos++);
-                allThings.Add(thing);
+                while (dataReader.Read())
+                {
+                    Thing thing = new Thing();
+                    int colpos = 0;
+
+                    thing.Id = dataReader.GetInt32(colpos++);
+                    thing.Name = dataReader.GetString(colpos++);
+                    thing.Description = dataReader.GetString(colpos++);
+                    allThings.Add(thing);
+                }
+
+                dataReader.Close();
             }
-
-            dataReader.Close();
-            sqlConnection.Close();
+            catch (Exception exception)
+            {
+                Debug.WriteLine(exception);
+            }
+            finally {
+                if (sqlConnection.State == ConnectionState.Closed) {
+                    sqlConnection.Close();
+                }
+            }
 
             return allThings;
         }
